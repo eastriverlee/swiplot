@@ -2,7 +2,7 @@ import SwiftUI
 import MetalKit
 
 let fps = 60
-let backgroundColor = Color.clear.metal
+let backgroundColor: UInt32 = 0x004040
 
 let scale = Int(NSScreen.main!.backingScaleFactor)
 class Screen {
@@ -30,6 +30,10 @@ class Screen {
         let buffer = device.makeBuffer(length: line * height)!
         texture = buffer.makeTexture(descriptor: descriptor, offset: 0, bytesPerRow: line)!
         data = buffer.contents().assumingMemoryBound(to: UInt32.self)
+        let count = (width-1) + (height-1)*line/4
+        for i in 0..<count {
+            data[i] = backgroundColor
+        }
     }
 }
 
@@ -61,7 +65,6 @@ struct MetalView: NSViewRepresentable {
         view.delegate = context.coordinator
         view.preferredFramesPerSecond = fps
         view.framebufferOnly = false
-        view.clearColor = backgroundColor
         view.drawableSize = view.frame.size
         view.enableSetNeedsDisplay = true
         view.device = device
@@ -95,9 +98,7 @@ struct MetalView: NSViewRepresentable {
                 encoder.endEncoding()
             }
             descriptor.colorAttachments[0].loadAction = .load
-            if let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) {
-            	encoder.endEncoding()
-            }
+            commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)?.endEncoding()
             commandBuffer.present(drawable)
             commandBuffer.commit()
         }
