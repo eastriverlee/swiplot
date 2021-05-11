@@ -2,17 +2,61 @@ import SwiftUI
 import MetalKit
 
 let fps = 60
-let backgroundColor = Color(red: 0, green: 0.7, blue: 0.2).metal
+let backgroundColor = Color.clear.metal
+
+let scale = Int(NSScreen.main!.backingScaleFactor)
+class Screen {
+    var texture: MTLTexture
+    var data: UnsafeMutablePointer<UInt32>
+    var width: Int
+    var height: Int
+    var line: Int
+
+    init(width w: Int, height h: Int) {
+        let width = w * scale
+        let height = h * scale
+        line = width * 4
+        line = (line + 255) / 256 * 256
+
+        let descriptor = MTLTextureDescriptor()
+        self.width = width
+        self.height = height
+        descriptor.width = width
+        descriptor.height = height
+        descriptor.usage = .shaderRead
+        descriptor.pixelFormat = .bgra8Unorm
+
+        let device = MTLCreateSystemDefaultDevice()!
+        let buffer = device.makeBuffer(length: line * height)!
+        texture = buffer.makeTexture(descriptor: descriptor, offset: 0, bytesPerRow: line)!
+        data = buffer.contents().assumingMemoryBound(to: UInt32.self)
+    }
+}
+
+var screen = Screen(width: screenWidth, height: screenHeight)
+
+func plot(_ x_: Int, _ y_: Int, with color: UInt32) {
+    let x = x_ * scale
+    let y = y_ * scale
+    var index = 0
+
+    for y in y..<y+scale {
+        for x in x..<x+scale {
+            index = x + y*screen.line/4
+            screen.data[index] = color
+        }
+    }
+}
 
 struct MetalView: NSViewRepresentable {
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator()
     }
 
     func makeNSView(context: NSViewRepresentableContext<MetalView>) -> MTKView {
-        let view = MTKView()
         let device = MTLCreateSystemDefaultDevice()!
+        let view = MTKView()
         
         view.delegate = context.coordinator
         view.preferredFramesPerSecond = fps
@@ -28,18 +72,12 @@ struct MetalView: NSViewRepresentable {
     }
 
     class Coordinator : NSObject, MTKViewDelegate {
-        var parent: MetalView
+        let device = MTLCreateSystemDefaultDevice()!
         var commandQueue: MTLCommandQueue!
 
-        init(_ parent: MetalView) {
-            let device = MTLCreateSystemDefaultDevice()! 
-
-            self.parent = parent
+        override init() {
             commandQueue = device.makeCommandQueue()!
             super.init()
-        }
-
-        func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         }
 
         func draw(in view: MTKView) {
@@ -47,10 +85,23 @@ struct MetalView: NSViewRepresentable {
             let commandBuffer = commandQueue.makeCommandBuffer()!
             let descriptor = view.currentRenderPassDescriptor!
 
-            let render = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)
-            render?.endEncoding()
+            if let encoder = commandBuffer.makeBlitCommandEncoder() {
+                let origin = MTLOriginMake(0,0,0)
+                let size = MTLSizeMake(screen.texture.width, screen.texture.height, 1)
+                encoder.copy(
+                    from:screen.texture, sourceSlice:0, sourceLevel:0, sourceOrigin: origin, sourceSize: size,
+                    to:drawable.texture, destinationSlice:0, destinationLevel:0, destinationOrigin: origin
+                )
+                encoder.endEncoding()
+            }
+            descriptor.colorAttachments[0].loadAction = .load
+            if let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) {
+            	encoder.endEncoding()
+            }
             commandBuffer.present(drawable)
             commandBuffer.commit()
         }
+
+        func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) { }
     }
 }

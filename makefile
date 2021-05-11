@@ -4,7 +4,10 @@ SRC=src/*.swift
 $(NAME): $(SRC)
 	swiftc -o $(NAME) $(SRC)
 
-run:
+run: $(NAME)
 	./$(NAME)
 
-.PHONY: run
+clean:
+	rm $(NAME)
+
+.PHONY: run clean
