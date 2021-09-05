@@ -1,6 +1,24 @@
 import SwiftUI
 import MetalKit
 
+typealias RGB = UInt32
+typealias RGBA = UInt64
+
+extension RGB { 
+    var r: RGB {
+        return ((self & 0xff0000) >> 16)
+    }
+    var g: RGB {
+        return ((self & 0x00ff00) >> 8)
+    }
+    var b: RGB {
+        return (self & 0x0000ff)
+    }
+    var metal: MTLClearColor {
+        return (Color(raw: self).metal)
+    }
+}
+
 extension Color {
     var hex: String {
         let description = self.description
@@ -24,27 +42,21 @@ extension Color {
             }
         }
     }
-    init(hex: String) {
+    var raw: RGB {
         let scanner = Scanner(string: hex.uppercased())
-        var rgb: UInt64 = 0
+        var rgb: RGBA = 0
         scanner.scanHexInt64(&rgb)
-        let r = Double((rgb & 0xff0000) >> 16) / 255
-        let g = Double((rgb & 0x00ff00) >> 8) / 255
-        let b = Double((rgb & 0x0000ff)) / 255
-        self.init(red: r, green: g, blue: b)
+        return RGB(rgb >> 8)
     }
-    init(hex: String, alpha: CGFloat) {
-        let scanner = Scanner(string: hex)
-        var rgb: UInt64 = 0
-        scanner.scanHexInt64(&rgb)
-        let r = Double((rgb & 0xff0000) >> 16) / 255
-        let g = Double((rgb & 0x00ff00) >> 8) / 255
-        let b = Double((rgb & 0x0000ff)) / 255
-        self.init(NSColor(red: CGFloat(r), green: CGFloat(g), blue: CGFloat(b), alpha: alpha))
+    init(raw: RGB, alpha: CGFloat = 1) {
+        let r = CGFloat(raw.r) / 255
+        let g = CGFloat(raw.g) / 255
+        let b = CGFloat(raw.b) / 255
+        self.init(NSColor(red: r, green: g, blue: b, alpha: alpha))
     }
     func rgb() -> (r: CGFloat, g: CGFloat, b: CGFloat) {
         let scanner = Scanner(string: "\(hex.prefix(6))")
-        var rgb: UInt64 = 0
+        var rgb: RGBA = 0
         scanner.scanHexInt64(&rgb)
         let r = CGFloat((rgb & 0xff0000) >> 16)
         let g = CGFloat((rgb & 0x00ff00) >> 8)
@@ -53,7 +65,7 @@ extension Color {
     }
     func rgba() -> (r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) {
         let scanner = Scanner(string: hex)
-        var rgba: UInt64 = 0
+        var rgba: RGBA = 0
         scanner.scanHexInt64(&rgba)
         let r = CGFloat((rgba & 0xff000000) >> 24)
         let g = CGFloat((rgba & 0x00ff0000) >> 16)
@@ -70,3 +82,4 @@ extension Color {
         return MTLClearColor(red: r, green: g, blue: b, alpha: a)
     }
 }
+

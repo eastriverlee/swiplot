@@ -1,33 +1,26 @@
+import Darwin
 import SwiftUI
 import MetalKit
 
-var screenWidth = 481
-var screenHeight = 481
+internal let screenWidth = Int(CommandLine.arguments[1])!
+internal let screenHeight = Int(CommandLine.arguments[2])!
+internal let backgroundColor: RGB = Color.pink.raw
+internal let fps = 60
 
-struct Window: View {
+struct Content: View {
     var body: some View {
-        MetalView()
+        MetalView(setup, loop)
             .frame(width: CGFloat(screenWidth), height: CGFloat(screenHeight))
-            .onAppear { run() }
     }
 }
 
-func run() {
-    //let r: UInt32 = 0x880000
-    //var g: UInt32 = 0x000000
-    //var b: UInt32 = 0x000000
-    //for y in 0..<screenHeight {
-    //    g = UInt32(Float(0xFF) * Float(y)/Float(screenHeight)) << 8
-    //        for x in 0..<screenWidth {
-    //            b = UInt32(Float(0xFF) * Float(x)/Float(screenWidth))
-    //                plot(x, y, with: r+g+b)
-    //        }
-    //}
-    //plot(240, 240, with: 0xFFFFFF)
+private func setup() {
+    NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseDown]) { event in
+        plot(event.locationInWindow, with: 0xFFFFFF)
+        return event
+    }
 }
 
-struct Content: View { 
-    var body: some View {
-        Window()
-    }
+private func loop() {
+    plot(Int.random(in: 0..<screenWidth), Int.random(in: 0..<screenHeight), with: 0xFFFFFF)
 }
