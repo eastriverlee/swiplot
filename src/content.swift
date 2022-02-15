@@ -2,8 +2,8 @@ import Darwin
 import SwiftUI
 import MetalKit
 
-internal let screenWidth = Int(CommandLine.arguments[1])!
-internal let screenHeight = Int(CommandLine.arguments[2])!
+internal let screenWidth = CommandLine.argc > 1 ? Int(CommandLine.arguments[1])! : 480
+internal let screenHeight = CommandLine.argc > 2 ? Int(CommandLine.arguments[2])! : 480
 internal let backgroundColor: RGB = Color.pink.raw
 internal let fps = 60
 

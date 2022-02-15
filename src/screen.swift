@@ -4,6 +4,7 @@ import MetalKit
 internal let scale = Int(NSScreen.main!.backingScaleFactor)
 internal let screen = Screen(width: screenWidth, height: screenHeight)
 
+let device = MTLCreateSystemDefaultDevice()!
 class Screen {
     var texture: MTLTexture
     var data: UnsafeMutablePointer<UInt32>
@@ -27,7 +28,6 @@ class Screen {
         descriptor.usage = .shaderRead
         descriptor.pixelFormat = .bgra8Unorm
 
-        let device = MTLCreateSystemDefaultDevice()!
         let buffer = device.makeBuffer(length: line * height)!
         texture = buffer.makeTexture(descriptor: descriptor, offset: 0, bytesPerRow: line)!
         data = buffer.contents().assumingMemoryBound(to: RGB.self)
@@ -41,7 +41,7 @@ class Screen {
     }
 }
 
-public func plot(_ x_: Int, _ y_: Int, with color: RGB) {
+internal func plot(_ x_: Int, _ y_: Int, with color: RGB) {
     let x = x_ * scale
     let y = y_ * scale
     var index = 0
@@ -54,7 +54,7 @@ public func plot(_ x_: Int, _ y_: Int, with color: RGB) {
     }
 }
 
-public func plot(_ point: NSPoint, with color: RGB) {
+internal func plot(_ point: NSPoint, with color: RGB) {
     let x = Int(point.x)
     let y = screenHeight - Int(point.y)
     plot(x, y, with: color)
