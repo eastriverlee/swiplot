@@ -2,17 +2,45 @@ import SwiftUI
 import MetalKit
 
 typealias RGB = UInt32
-typealias RGBA = UInt64
+typealias RGBA = RGB
+typealias ARGB = RGB
 
-extension RGB { 
-    var r: RGB {
-        return ((self & 0xff0000) >> 16)
+extension ARGB { 
+    var a: ARGB {
+        get {
+            return ((self & 0xff000000) >> 24)
+        }
+        set (color) {
+            self &= 0x00ffffff
+            self += ((color & 0xff) << 24)
+        }
     }
-    var g: RGB {
-        return ((self & 0x00ff00) >> 8)
+    var r: ARGB {
+        get {
+            return ((self & 0x00ff0000) >> 16)
+        }
+        set (color) {
+            self &= 0xff00ffff
+            self += ((color & 0xff) << 16)
+        }
     }
-    var b: RGB {
-        return (self & 0x0000ff)
+    var g: ARGB {
+        get {
+            return ((self & 0x0000ff00) >> 8)
+        }
+        set (color) {
+            self &= 0xffff00ff
+            self += ((color & 0xff) << 8)
+        }
+    }
+    var b: ARGB {
+        get {
+            return (self & 0xff)
+        }
+        set (color) {
+            self &= 0xffffff00
+            self += (color & 0xff)
+        }
     }
     var metal: MTLClearColor {
         return (Color(raw: self).metal)
@@ -21,32 +49,13 @@ extension RGB {
 
 extension Color {
     var hex: String {
-        let description = self.description
-        if description.hasPrefix("#") {
-            return "\(description.suffix(8))"
-        } else {
-            switch description {
-                case "white": return "FFFFFFFF"
-                case "black": return "000000FF"
-                case "red": return "FF443AFF"
-                case "green": return "32D74BFF"
-                case "blue": return "0A84FFFF"
-                case "orange": return "FF9F0AFF"
-                case "yellow": return "FFD60AFF"
-                case "pink": return "FC375DFF"
-                case "purple": return "8E41B5FF"
-                case "gray": return "98989DFF"
-                case "primary": return "E3E3E3FF"
-                case "secondary": return "A3A3A3FF"
-                default: return "00000000"
-            }
-        }
+        return String(format: "%8x", raw)
     }
-    var raw: RGB {
-        let scanner = Scanner(string: hex.uppercased())
-        var rgb: RGBA = 0
-        scanner.scanHexInt64(&rgb)
-        return RGB(rgb >> 8)
+    var raw: ARGB {
+        let rgba = rgba()
+
+        return ARGB(rgba.a)<<24 + ARGB(rgba.r)<<16 + ARGB(rgba.g)<<8 + ARGB(rgba.b)
+        
     }
     init(raw: RGB, alpha: CGFloat = 1) {
         let r = CGFloat(raw.r) / 255
@@ -55,30 +64,26 @@ extension Color {
         self.init(NSColor(red: r, green: g, blue: b, alpha: alpha))
     }
     func rgb() -> (r: CGFloat, g: CGFloat, b: CGFloat) {
-        let scanner = Scanner(string: "\(hex.prefix(6))")
-        var rgb: RGBA = 0
-        scanner.scanHexInt64(&rgb)
-        let r = CGFloat((rgb & 0xff0000) >> 16)
-        let g = CGFloat((rgb & 0x00ff00) >> 8)
-        let b = CGFloat((rgb & 0x0000ff) )
+        let color = NSColor(self).cgColor.components!
+        let r = color[0] * 255 
+        let g = color[1] * 255 
+        let b = color[2] * 255 
         return (r, g, b)
     }
     func rgba() -> (r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) {
-        let scanner = Scanner(string: hex)
-        var rgba: RGBA = 0
-        scanner.scanHexInt64(&rgba)
-        let r = CGFloat((rgba & 0xff000000) >> 24)
-        let g = CGFloat((rgba & 0x00ff0000) >> 16)
-        let b = CGFloat((rgba & 0x0000ff00) >> 8)
-        let a = CGFloat((rgba & 0x000000ff) )
+        let color = NSColor(self).cgColor.components!
+        let r = color[0] * 255 
+        let g = color[1] * 255 
+        let b = color[2] * 255 
+        let a = color[3] * 255 
         return (r, g, b, a)
     }
     var metal: MTLClearColor {
         let rgba = self.rgba()
-        let r = Double(rgba.r / 255)
-        let g = Double(rgba.g / 255)
-        let b = Double(rgba.b / 255)
-        let a = Double(rgba.a / 255)
+        let r = Double(rgba.a / 255)
+        let g = Double(rgba.r / 255)
+        let b = Double(rgba.g / 255)
+        let a = Double(rgba.b / 255)
         return MTLClearColor(red: r, green: g, blue: b, alpha: a)
     }
 }

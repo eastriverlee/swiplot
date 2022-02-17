@@ -6,7 +6,8 @@ struct Metal: App {
     var body: some Scene {
         WindowGroup {
             Content()
-                .onDisappear { exit(0) }
+            .environmentObject(global)
+            .onDisappear { exit(0) }
         }
     }
 }
