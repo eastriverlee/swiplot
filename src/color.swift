@@ -45,6 +45,11 @@ extension ARGB {
     var metal: MTLClearColor {
         return (Color(raw: self).metal)
     }
+    func opacity(_ opacity: CGFloat) -> ARGB {
+        var clone = self
+        clone.a = ARGB(CGFloat(clone.a) * opacity)
+        return clone
+    }
 }
 
 extension Color {
