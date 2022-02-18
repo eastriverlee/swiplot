@@ -72,6 +72,7 @@ private struct _MetalView: NSViewRepresentable {
 }
 
 private let filter = MPSImageLanczosScale(device: device)
+private var transform = MPSScaleTransform()
 extension MTLCommandBuffer {
     func overwrite(_ original: MTLTexture, with replacement: MTLTexture) {
         let scale = CGFloat(original.width) / CGFloat(replacement.width)
@@ -81,7 +82,8 @@ extension MTLCommandBuffer {
                 encoder.endEncoding()
             }
         } else {
-            var transform = MPSScaleTransform(scaleX: scale, scaleY: scale, translateX: 0, translateY: 0)
+            transform.scaleX = scale
+            transform.scaleY = scale
             withUnsafePointer(to: &transform) { transform in
                 filter.scaleTransform = transform
                 filter.encode(commandBuffer: self, sourceTexture: replacement, destinationTexture: original)

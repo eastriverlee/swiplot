@@ -2,9 +2,10 @@ import Darwin
 import SwiftUI
 import MetalKit
 
+private let maxDensity = NSScreen.screens.map{$0.backingScaleFactor}.max() ?? 1
 internal let screenWidth = CommandLine.argc > 1 ? Int(CommandLine.arguments[1])! : 480
 internal let screenHeight = CommandLine.argc > 2 ? Int(CommandLine.arguments[2])! : 480
-internal let density = CommandLine.argc > 3 ? CGFloat(Float(CommandLine.arguments[3])!) : 1
+internal let density = CommandLine.argc > 3 ? CGFloat(Float(CommandLine.arguments[3])!) : maxDensity
 internal let backgroundColor: RGBA = Color.pink.raw
 internal let fps = 60
 internal let global = Global()
