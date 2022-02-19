@@ -1,9 +1,9 @@
 import SwiftUI
 import MetalKit
 
-typealias RGB = UInt32
-typealias RGBA = RGB
-typealias ARGB = RGB
+public typealias RGB = UInt32
+public typealias RGBA = RGB
+public typealias ARGB = RGB
 
 extension ARGB { 
     var a: ARGB {
@@ -47,7 +47,16 @@ extension ARGB {
     }
     func opacity(_ opacity: CGFloat) -> ARGB {
         var clone = self
-        clone.a = ARGB(CGFloat(clone.a) * opacity)
+        let alpha = opacity.clamp(0, 1)
+
+        clone.a = ARGB(CGFloat(clone.a) * alpha)
+        return clone
+    }
+    func transparent(_ transparency: CGFloat) -> ARGB {
+        var clone = self
+        let alpha = (1 - transparency).clamp(0, 1)
+
+        clone.a = ARGB(CGFloat(clone.a) * alpha)
         return clone
     }
 }

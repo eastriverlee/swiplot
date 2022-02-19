@@ -5,12 +5,12 @@ width=480
 height=480
 
 $(NAME): $(SRC)
-	swiftc -o $(NAME) $(SRC)
+	swiftc -g -o $(NAME) $(SRC)
 
 run: $(NAME)
 	./$(NAME) $(width) $(height)
 
 clean:
-	rm $(NAME)
+	rm -rf $(NAME) $(NAME).dSYM
 
 .PHONY: run clean
