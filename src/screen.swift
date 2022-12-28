@@ -23,6 +23,7 @@ class Screen {
         descriptor.width = width
         descriptor.height = height
         descriptor.usage = .shaderRead
+        descriptor.storageMode = .shared
         descriptor.pixelFormat = .bgra8Unorm
         line = width*4
 

@@ -20,9 +20,9 @@ class Global: ObservableObject {
     @Published var lineType: LineType = .softLine {
         willSet {
             switch newValue {
-            case .softLine: _line = softLine
-            case .hardLine: _line = hardLine
-            case .thickHardLine: _line = thickHardLine
+            case .softLine: _line = line
+            case .hardLine: _line = line
+            case .thickHardLine: _line = line
             }
         }
     }
